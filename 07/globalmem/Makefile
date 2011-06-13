@@ -1,4 +1,4 @@
-obj-m :=globalmem.o
+obj-m :=globalmem_lock.o
 CURRENT_PATH := $(shell pwd)
 LINUX_KERNEL_PATH :=/home/pete/kernel/linux-2.6.26/
 

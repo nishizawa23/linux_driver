@@ -21,7 +21,7 @@
 #define MEM_CLEAR 0x1  /*清0全局内存*/
 #define GLOBALMEM_MAJOR 254    /*预设的globalmem的主设备号*/
 
-static globalmem_major = GLOBALMEM_MAJOR;
+static int globalmem_major = GLOBALMEM_MAJOR;
 /*globalmem设备结构体*/
 struct globalmem_dev                                     
 {                                                        
@@ -101,7 +101,7 @@ static ssize_t globalmem_read(struct file *filp, char __user *buf, size_t size,
     *ppos += count;
     ret = count;
 
-    printk(KERN_INFO "read %d bytes(s) from %d\n", count, p);
+    printk(KERN_INFO "read %d bytes(s) from %ld\n", count, p);
   }
   up(&dev->sem); //释放信号量
 
@@ -135,7 +135,7 @@ static ssize_t globalmem_write(struct file *filp, const char __user *buf,
     *ppos += count;
     ret = count;
 
-    printk(KERN_INFO "written %d bytes(s) from %d\n", count, p);
+    printk(KERN_INFO "written %d bytes(s) from %ld\n", count, p);
   }
   up(&dev->sem); //释放信号量
   return ret;
@@ -234,7 +234,7 @@ int globalmem_init(void)
   memset(globalmem_devp, 0, sizeof(struct globalmem_dev));
   
   globalmem_setup_cdev(globalmem_devp, 0);
-  init_MUTEX(&globalfifo_devp->sem);   /*初始化信号量*/  
+  init_MUTEX(&globalmem_devp->sem);   /*初始化信号量*/  
   return 0;
 
   fail_malloc: unregister_chrdev_region(devno, 1);
