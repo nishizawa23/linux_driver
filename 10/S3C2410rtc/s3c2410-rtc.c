@@ -34,7 +34,8 @@
 
 #include <asm/mach/time.h>
 
-#include <asm/arch/regs-rtc.h>
+//#include <asm/arch/regs-rtc.h>
+#include <asm-arm/plat-s3c/regs-rtc.h>
 
 /* need this for the RTC_AF definitions */
 #include <linux/mc146818rtc.h>
@@ -341,13 +342,16 @@ static int s3c2410_rtc_open(void)
 	int ret;
 
 	ret = request_irq(s3c2410_rtc_alarmno, s3c2410_rtc_alarmirq,
-			  SA_INTERRUPT,  "s3c2410-rtc alarm", NULL);
+//			  SA_INTERRUPT,  "s3c2410-rtc alarm", NULL);
+			  IRQF_SHARED,  "s3c2410-rtc alarm", NULL);
 
 	if (ret)
 		printk(KERN_ERR "IRQ%d already in use\n", s3c2410_rtc_alarmno);
 
+//	ret = request_irq(s3c2410_rtc_tickno, s3c2410_rtc_tickirq,
+//			  SA_INTERRUPT,  "s3c2410-rtc tick", NULL);
 	ret = request_irq(s3c2410_rtc_tickno, s3c2410_rtc_tickirq,
-			  SA_INTERRUPT,  "s3c2410-rtc tick", NULL);
+			  IRQF_SHARED,  "s3c2410-rtc tick", NULL);
 
 	if (ret) {
 		printk(KERN_ERR "IRQ%d already in use\n", s3c2410_rtc_tickno);

@@ -35,6 +35,13 @@ struct globalfifo_dev
   struct fasync_struct *async_queue; /* 异步结构体指针，用于读 */ 
 };
 
+/* globalfifo fasync函数*/
+static int globalfifo_fasync(int fd, struct file *filp, int mode)
+{
+	struct globalfifo_dev *dev = filp->private_data; 
+	return fasync_helper(fd, filp, mode, &dev->async_queue);
+}
+
 struct globalfifo_dev *globalfifo_devp; /*设备结构体指针*/
 /*文件打开函数*/
 int globalfifo_open(struct inode *inode, struct file *filp)
@@ -47,7 +54,8 @@ int globalfifo_open(struct inode *inode, struct file *filp)
 int globalfifo_release(struct inode *inode, struct file *filp)
 {
 	/* 将文件从异步通知列表中删除 */
-  globalmem_fasync( - 1, filp, 0);
+//  globalmem_fasync( - 1, filp, 0);
+  globalfifo_fasync(-1,filp,0);
   
   return 0;
 }
@@ -99,12 +107,7 @@ static unsigned int globalfifo_poll(struct file *filp, poll_table *wait)
   return mask;
 }
 
-/* globalfifo fasync函数*/
-static int globalfifo_fasync(int fd, struct file *filp, int mode)
-{
-	struct globalfifo_dev *dev = filp->private_data; 
-	return fasync_helper(fd, filp, mode, &dev->async_queue);
-}
+
 
 
 /*globalfifo读函数*/
