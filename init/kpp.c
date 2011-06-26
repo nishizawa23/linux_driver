@@ -13,6 +13,8 @@
 #include <linux/input.h>
 #include <asm-arm/arch-s3c2410/map.h>
 #include <linux/interrupt.h>
+#include <asm-arm/arch-s3c2410/regs-gpio.h>
+#include <asm-arm/arch-s3c2410/gpio.h>
 
 #define MX53_SMD_KEY_VOL_UP 0
 #define MX53_SMD_KEY_VOL_DOWN 1
@@ -89,39 +91,28 @@ static int __init kpp_probe(struct platform_device *pdev)
 		int irq;
 		int retval,error;
 		irq = platform_get_irq(pdev, 0);
-        printk(KERN_ERR
-               "init irq no is %d\n",irq);
-		retval = request_irq(irq, mxc_kpp_interrupt,IRQF_SAMPLE_RANDOM | IRQF_TRIGGER_RISING |
-        IRQF_TRIGGER_FALLING, "hello", NULL);
-/*
-
-        irq = gpio_to_irq(button->gpio);
+//		int err;
+   //     error = gpio_direction_input(S3C2410_GPF0);
+		/*
+        if (error < 0) {
+            pr_err("gpio-keys: failed to configure input"
+        );
+        }   
+		*/
+        irq = gpio_to_irq(S3C2410_GPF0);
         if (irq < 0) {
         error = irq;
         pr_err("gpio-keys: Unable to get irq number"
-               " for GPIO %d, error %d\n",
-       // button->gpio, error);
-        19, error);
-        gpio_free(button->gpio);
-//        goto fail;
+			  );
         }
-
-        error = request_irq(irq,mxc_kpp_interrupt ,
-        IRQF_SAMPLE_RANDOM | IRQF_TRIGGER_RISING |
-        IRQF_TRIGGER_FALLING,
-       // button->desc ? button->desc : "gpio_keys",
-        "init_KPP",
-        NULL);
-
-        if (error) {
-        pr_err("gpio-keys: Unable to claim irq %d; error %d\n",
-        irq, error);
-        //gpio_free(button->gpio);
-       // goto fail;
-        }
-		*/
-		int err = 0;
-		return err;
+        printk(KERN_ERR
+               "init irq no is %d\n",irq);
+		retval = request_irq(irq, mxc_kpp_interrupt,IRQF_SAMPLE_RANDOM | IRQF_TRIGGER_RISING | 
+        IRQF_TRIGGER_FALLING, "hello", NULL);
+		if(retval != 0)
+        printk(KERN_ERR
+               "fail to request_irq");
+		return 0;
 }
 
 
