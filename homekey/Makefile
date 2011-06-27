@@ -1,4 +1,4 @@
-obj-m :=kpp.o
+obj-m :=homekey.o
 CURRENT_PATH := $(shell pwd)
 LINUX_KERNEL_PATH := /home/pete/kernel/linux-2.6.26
 all:                
