@@ -1,11 +1,11 @@
 
 /*
  ===================================================
- Name            : my2440_buttons.c
- Author          : Huang Gang
+ Name            : home_key.c
+ Author          : Huang Xinghua
  Date            : 09/11/2009
  Copyright       : GPL
- Description     : my2440 buttons driver
+ Description     : 2410 buttons driver
  ===================================================
  */
 
@@ -18,8 +18,10 @@
 #include <linux/interrupt.h>
 #include <linux/irq.h>
 #include <asm/irq.h>
-#include <mach/regs-gpio.h>
-#include <mach/hardware.h>
+#include <asm-arm/arch-s3c2410/regs-gpio.h>
+#include <asm-arm/arch-s3c2410/irqs.h>
+#include <asm/arch/regs-gpio.h>
+#include <asm/hardware.h>
 
 #define DEVICE_NAME         "my2440_buttons"    //设备名称
 #define DEVICE_MAJOR        232                 //主设备号                
@@ -248,5 +250,5 @@ module_init(button_init);
 module_exit(button_exit);
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Huang Gang");
-MODULE_DESCRIPTION("My2440 button driver");
+MODULE_AUTHOR("Huang Xinghua");
+MODULE_DESCRIPTION("2410 button driver");
