@@ -1,6 +1,6 @@
 obj-m :=second.o
 CURRENT_PATH := $(shell pwd)
-LINUX_KERNEL_PATH :=/home/pete/kernel/linux-2.6.26/
+LINUX_KERNEL_PATH := /home/pete/2410/linux-2.6.26
 
 all:
 	make -C $(LINUX_KERNEL_PATH) M=$(CURRENT_PATH) modules
