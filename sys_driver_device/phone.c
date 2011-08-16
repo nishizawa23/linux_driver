@@ -52,19 +52,31 @@ static BUS_ATTR(scan_bus, 0777, show_scan_bus, store_scan_bus);
 
 static int __init phone_probe(struct platform_device *pdev)
 {
-        printk(KERN_ERR "fail to request_irq");
-		//pr_debug("fail\n");
-		return 0;
+	pr_info("function is  %s, line is %d",__func__,__LINE__);
+	//pr_debug("fail\n");
+	return 0;
 }
 
 static int phone_remove(struct platform_device *pdev)
 {
-	        return 0;
+	return 0;
+}
+
+static int phone_suspend(struct platform_device *pdev, pm_message_t state)
+{
+	return 0;
+}
+
+static int phone_resume(struct platform_device *pdev)
+{
+	return 0;
 }
 
 static struct platform_driver phone_driver = {
     .probe    = phone_probe,
     .remove   = __devexit_p(phone_remove),
+	.suspend  = phone_suspend,
+	.resume	  = phone_resume,
     .driver   = {
     .name     = "phone_ts",
     .owner    = THIS_MODULE,
@@ -83,32 +95,32 @@ static int __devinit phone_init(void)
     ret = platform_device_register(&phone_device);
 
 	if(ret){
-		printk( KERN_ERR "Fail to platform_device_register error:%d\n",ret);
+		pr_err("Fail to platform_device_register error:%d\n",ret);
 		return ret;
 	}
 
 	ret = platform_driver_register(&phone_driver);
 
 	if(ret){
-		printk( KERN_ERR "Fail to platform_driver_register error:%d\n",ret);
+		pr_err("Fail to platform_driver_register error:%d\n",ret);
 		return ret;
 	}
 
 	if( device_create_file(&(phone_device.dev),&dev_attr_scan_dev)){
 
-		printk( KERN_ERR "Fail to device_create_file at %s\n",__func__);
+		pr_err("Fail to device_create_file at %s\n",__func__);
 	}
 
 	if( bus_create_file(phone_driver.driver.bus,&bus_attr_scan_bus)){
 
-		printk( KERN_ERR "Fail to bus_create_file at %s\n",__func__);
+		pr_err("Fail to bus_create_file at %s\n",__func__);
 	}
 
 	if( driver_create_file(&(phone_driver.driver),&driver_attr_scan_driver)){
 
-		printk( KERN_ERR "Fail to driver_create_file at %s\n",__func__);
+		pr_err("Fail to driver_create_file at %s\n",__func__);
 	}
-	
+
 	return ret;
 
 }
