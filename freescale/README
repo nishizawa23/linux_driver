@@ -1,0 +1,2 @@
+if you want to complies driver as modules,you can use
+make modules SUBDIRS=samples/kobject
