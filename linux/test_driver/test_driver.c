@@ -22,11 +22,12 @@
 #include <linux/gpio_keys.h>
 #include <linux/workqueue.h>
 #include <linux/gpio.h>
-#include <linux/earlysuspend.h>
 #include <linux/suspend.h>
 #include <linux/notifier.h>
 
-#define MY_CONFIG_PM 1 /*if want use .pm = &gpio_keys_pm_ops, set to 1*/
+#define MY_CONFIG_PM /*if want use .pm = &gpio_keys_pm_ops*/
+//#define ANDROID_KERNEL 1
+#define DRIVER_IS_MODULE
 
 struct test_data_s{
 	int a;
@@ -68,6 +69,7 @@ static const struct dev_pm_ops test_pm_ops = {
 };
 #endif
 
+#ifdef ANDROID_KERNEL
 static void test_early_suspend(struct early_suspend *h)
 {
 	pr_info("at %s line %d\n",__func__,__LINE__);
@@ -83,6 +85,7 @@ static struct early_suspend my_early_suspend_desc = {
 	.suspend = test_early_suspend,
 	.resume = test_early_resume,
 };
+#endif
 
 static int my_pm_event(struct notifier_block *this, unsigned long event,
 				void *ptr)
@@ -125,12 +128,24 @@ static struct platform_driver test_driver = {
     }
 };
 
+#ifdef DRIVER_IS_MODULE
+static void platform_test__release(struct device *dev)
+{
+	
+	pr_info("at %s line %d\n",__func__,__LINE__);
+	return;
+}
+#endif
+
 static struct platform_device test_device = {
 	.name = "my_test",
 	.id = -1,
 	.num_resources = 0,
 	.dev = {
 		.platform_data = &test_data,
+#ifdef DRIVER_IS_MODULE
+		.release = platform_test__release,
+#endif
 	}
 };
 
@@ -152,7 +167,9 @@ static int __devinit test_init(void)
 		return ret;
 	}
 
+#ifdef ANDROID_KERNEL
 	register_early_suspend(&my_early_suspend_desc);
+#endif
 
 	ret = register_pm_notifier(&my_power_notifier);
 	if (ret) {
@@ -169,9 +186,11 @@ static void __exit test_exit(void)
 
 	platform_driver_unregister(&test_driver);
 
+#ifdef ANDROID_KERNEL
 	unregister_early_suspend(&my_early_suspend_desc);
+#endif
 
-	return unregister_pm_notifier(&my_power_notifier);
+	unregister_pm_notifier(&my_power_notifier);
 }
 
 module_init(test_init);
