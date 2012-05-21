@@ -24,22 +24,65 @@
 #include <linux/gpio.h>
 #include <linux/suspend.h>
 #include <linux/notifier.h>
+#include <linux/sysfs.h>
 
-#define MY_CONFIG_PM /*if want use .pm = &gpio_keys_pm_ops*/
-//#define ANDROID_KERNEL 1
+#define MY_CONFIG_PM /*if want use .pm = &test_pm_ops*/
+//#define ANDROID_KERNEL
 #define DRIVER_IS_MODULE
+
+static char BUF[10] = "hello";
 
 struct test_data_s{
 	int a;
 	int b;
 } test_data;
 
-static int __devinit test_probe(struct platform_device *pdev)
+static ssize_t test_show(struct device *dev,	\
+		struct device_attribute *attr,	\
+		char *buf)			\
 {
-	pr_info("function is  %s, line is %d",__func__,__LINE__);
-
+	pr_info("%s BUF is %s",__func__,BUF);
 	return 0;
 
+}
+
+static ssize_t test_store(struct device *dev,	\
+		struct device_attribute *attr,	\
+		const char *buf,		\
+		size_t count)
+{
+	strcpy(BUF,buf);
+	pr_info("%s buf is %s",__func__,buf);
+	pr_info("%s BUF is %s",__func__,BUF);
+	return count;
+
+}
+
+static DEVICE_ATTR(test, S_IWUSR|S_IXUSR|S_IRUGO | S_IWGRP|S_IRWXUGO,	\
+		test_show,test_store);
+
+static struct attribute *test_attrs[] = {
+	&dev_attr_test.attr,
+	NULL,
+};
+
+static struct attribute_group test_attr_group = {
+	.attrs = test_attrs,
+};
+
+static int __devinit test_probe(struct platform_device *pdev)
+{
+	int error;
+	struct device *dev = &pdev->dev;
+
+	pr_info("function is  %s, line is %d",__func__,__LINE__);
+
+	error = sysfs_create_group(&pdev->dev.kobj, &test_attr_group);
+
+	if (error)
+		dev_err(dev, "Unable to export test, error: %d\n",error);
+
+	return error;
 }
 
 static int test_remove(struct platform_device *pdev)
@@ -153,7 +196,7 @@ static int __devinit test_init(void)
 {
 	int ret = 0;
 
-    ret = platform_device_register(&test_device);
+	ret = platform_device_register(&test_device);
 
 	if(ret){
 		pr_err("Fail to platform_device_register error:%d\n",ret);
