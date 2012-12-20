@@ -15,12 +15,13 @@
  * $Id: _mmap.c.in,v 1.13 2004/10/18 18:07:36 corbet Exp $
  */
 
-#include <linux/config.h>
 #include <linux/module.h>
-
+#include <linux/fs.h>
 #include <linux/mm.h>		/* everything */
 #include <linux/errno.h>	/* error codes */
+#include <linux/fs.h>
 #include <asm/pgtable.h>
+#include <linux/semaphore.h>
 
 #include "scullc.h"		/* local definitions */
 
@@ -57,17 +58,19 @@ void scullc_vma_close(struct vm_area_struct *vma)
  * is individually decreased, and would drop to 0.
  */
 
-struct page *scullc_vma_nopage(struct vm_area_struct *vma,
-                                unsigned long address, int *type)
+int scullc_vma_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
 {
 	unsigned long offset;
 	struct scullc_dev *ptr, *dev = vma->vm_private_data;
-	struct page *page = NOPAGE_SIGBUS;
+	struct page *page = NULL;
 	void *pageptr = NULL; /* default to "missing" */
 
 	down(&dev->sem);
-	offset = (address - vma->vm_start) + (vma->vm_pgoff << PAGE_SHIFT);
-	if (offset >= dev->size) goto out; /* out of range */
+	offset = (unsigned long)(vmf->virtual_address - vma->vm_start) + (vma->vm_pgoff << PAGE_SHIFT);
+	if (offset >= dev->size) {
+	up(&dev->sem);
+	return VM_FAULT_SIGBUS;
+	}; /* out of range */
 
 	/*
 	 * Now retrieve the scullc device from the list,then the page.
@@ -80,15 +83,17 @@ struct page *scullc_vma_nopage(struct vm_area_struct *vma,
 		offset -= dev->qset;
 	}
 	if (ptr && ptr->data) pageptr = ptr->data[offset];
-	if (!pageptr) goto out; /* hole or end-of-file */
+	if (!pageptr) {
+		up(&dev->sem);
+		return VM_FAULT_SIGBUS;
+	}; /* hole or end-of-file */
+	page = virt_to_page(pageptr);
 
 	/* got it, now increment the count */
 	get_page(page);
-	if (type)
-		*type = VM_FAULT_MINOR;
-  out:
+	vmf->page = page;
 	up(&dev->sem);
-	return page;
+	return 0;
 }
 
 
@@ -96,14 +101,14 @@ struct page *scullc_vma_nopage(struct vm_area_struct *vma,
 struct vm_operations_struct scullc_vm_ops = {
 	.open =     scullc_vma_open,
 	.close =    scullc_vma_close,
-	.nopage =   scullc_vma_nopage,
+	.fault = scullc_vma_fault,
 };
 
 
 int scullc_mmap(struct file *filp, struct vm_area_struct *vma)
 {
-	struct inode *inode = filp->f_dentry->d_inode;
-
+	//struct inode *inode = filp->f_dentry->d_inode;
+	struct inode *inode = filp->f_path.dentry->d_inode;
 	/* refuse to map if order is not 0 */
 	if (scullc_devices[iminor(inode)].order)
 		return -ENODEV;
