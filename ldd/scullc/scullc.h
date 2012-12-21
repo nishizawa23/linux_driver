@@ -49,6 +49,7 @@
  *
  * The array (quantum-set) is SCULLC_QSET long.
  */
+#define SCULLP_ORDER 0 /* one page at a time */
 #define SCULLC_QUANTUM  4000 /* use a quantum size like scull */
 #define SCULLC_QSET     500
 
@@ -57,6 +58,7 @@ struct scullc_dev {
 	struct scullc_dev *next;  /* next listitem */
 	int vmas;                 /* active mappings */
 	int quantum;              /* the current allocation size */
+	int order; /* the current allocation order */
 	int qset;                 /* the current array size */
 	size_t size;              /* 32-bit will suffice */
 	struct semaphore sem;     /* Mutual exclusion */
