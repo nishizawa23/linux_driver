@@ -5,7 +5,7 @@ mode="664"
 
 # Group: since distributions do it differently, look for wheel or use staff
 if grep '^staff:' /etc/group > /dev/null; then
-    group="staff"
+    group="pete"
 else
     group="wheel"
 fi
