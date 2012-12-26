@@ -15,10 +15,10 @@
  * $Id: _mmap.c.in,v 1.13 2004/10/18 18:07:36 corbet Exp $
  */
 
-#include <linux/config.h>
 #include <linux/module.h>
-
+#include <linux/semaphore.h>
 #include <linux/mm.h>		/* everything */
+#include <linux/fs.h>
 #include <linux/errno.h>	/* error codes */
 #include <asm/pgtable.h>
 
@@ -57,17 +57,19 @@ void scullv_vma_close(struct vm_area_struct *vma)
  * is individually decreased, and would drop to 0.
  */
 
-struct page *scullv_vma_nopage(struct vm_area_struct *vma,
-                                unsigned long address, int *type)
+int scullv_vma_fault(struct vm_area_struct *vma,struct vm_fault *vmf)
 {
 	unsigned long offset;
 	struct scullv_dev *ptr, *dev = vma->vm_private_data;
-	struct page *page = NOPAGE_SIGBUS;
+	struct page *page;
 	void *pageptr = NULL; /* default to "missing" */
 
 	down(&dev->sem);
-	offset = (address - vma->vm_start) + (vma->vm_pgoff << PAGE_SHIFT);
-	if (offset >= dev->size) goto out; /* out of range */
+	offset = (unsigned long) (vmf->virtual_address - vma->vm_start) + (vma->vm_pgoff << PAGE_SHIFT);
+	if (offset >= dev->size) {
+		up(&dev->sem);
+		return VM_FAULT_SIGBUS;
+	} /* out of range */
 
 	/*
 	 * Now retrieve the scullv device from the list,then the page.
@@ -80,8 +82,10 @@ struct page *scullv_vma_nopage(struct vm_area_struct *vma,
 		offset -= dev->qset;
 	}
 	if (ptr && ptr->data) pageptr = ptr->data[offset];
-	if (!pageptr) goto out; /* hole or end-of-file */
-
+	if (!pageptr) {
+		up(&dev->sem);
+		return VM_FAULT_SIGBUS;
+	} /* hole or end-of-file */
 	/*
 	 * After scullv lookup, "page" is now the address of the page
 	 * needed by the current process. Since it's a vmalloc address,
@@ -91,11 +95,9 @@ struct page *scullv_vma_nopage(struct vm_area_struct *vma,
 
 	/* got it, now increment the count */
 	get_page(page);
-	if (type)
-		*type = VM_FAULT_MINOR;
-  out:
+	vmf->page = page;
 	up(&dev->sem);
-	return page;
+	return 0;
 }
 
 
@@ -103,7 +105,7 @@ struct page *scullv_vma_nopage(struct vm_area_struct *vma,
 struct vm_operations_struct scullv_vm_ops = {
 	.open =     scullv_vma_open,
 	.close =    scullv_vma_close,
-	.nopage =   scullv_vma_nopage,
+	.fault = scullv_vma_fault,
 };
 
 
@@ -113,7 +115,7 @@ int scullv_mmap(struct file *filp, struct vm_area_struct *vma)
 	/* don't do anything here: "nopage" will set up page table entries */
 	vma->vm_ops = &scullv_vm_ops;
 	vma->vm_flags |= VM_RESERVED;
-	vma->vm_private_data = filp->private_data;
+	vma->vm_file->private_data = filp->private_data;
 	scullv_vma_open(vma);
 	return 0;
 }
