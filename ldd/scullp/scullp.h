@@ -40,6 +40,8 @@
 
 #define SCULLP_DEVS 4    /* scullp0 through scullp3 */
 
+#define SCULLP_USE_PROC /* don't waste space if unused */
+
 /*
  * The bare device is a variable-length region of memory.
  * Use a linked list of indirect blocks.

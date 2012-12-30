@@ -64,9 +64,20 @@ int scullp_vma_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
 	struct scullp_dev *ptr, *dev = vma->vm_private_data;
 	struct page *page;
 	void *pageptr = NULL; /* default to "missing" */
+	
+	printk("vma->vm_start   is %08lx \n",vma->vm_start);
+	printk("vma->vm_end     is %08lx \n",vma->vm_end);
+	printk("vma->vm_pgoff   is %08lx \n\n",vma->vm_pgoff);
+	
+	printk("vmf->pgoff      is %08lx \n",vmf->pgoff);
+	printk("vmf->virtual_address is %p \n",vmf->virtual_address);
+	printk("vmf->flags       is %08x \n",vmf->flags);
 
 	down(&dev->sem);
 	offset = (unsigned long)(vmf->virtual_address - vma->vm_start) + (vma->vm_pgoff << PAGE_SHIFT);
+	
+	printk("\noffset is %08lx dev->size is %08lx page_size is %d\n",offset,dev->size,1<<PAGE_SHIFT);
+
 	if (offset >= dev->size) {
 	up(&dev->sem);
 	return VM_FAULT_SIGBUS;

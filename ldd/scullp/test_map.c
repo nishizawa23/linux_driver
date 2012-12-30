@@ -33,8 +33,8 @@ int main(int argc, const char *argv[])
 		return 0;
 	}
 
-	vadr = mmap(0,100000,PROT_READ|PROT_WRITE,MAP_SHARED,fd,1<<12);
-
+	vadr = mmap(0,2<<12,PROT_READ|PROT_WRITE,MAP_SHARED,fd,1<<12);
+	
 	close(fd);
 
 	vadr[0] = 'w';
@@ -42,12 +42,13 @@ int main(int argc, const char *argv[])
 	vadr[2] = 'r';
 	vadr[3] = 'd';
 
+	printf("%s\n",vadr);
+	
 	close(fd);
 
-	sleep(20);
+	sleep(5);
 
-	munmap((void*)vadr,100000-(1<<12));
+	munmap((void*)vadr,2<<12);
 	
 	return 0;
 }
-

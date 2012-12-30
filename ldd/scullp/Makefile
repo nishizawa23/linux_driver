@@ -26,6 +26,7 @@ PWD       := $(shell pwd)
 
 modules:
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) LDDINC=$(PWD) modules
+	gcc -o test_map test_map.c
 
 endif
 
